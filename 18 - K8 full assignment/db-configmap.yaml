@@ -1,0 +1,11 @@
+apiVersion: v1
+data:
+  PMA_ARBITRARY: "1"
+  PMA_HOST: mariadb-service
+  PMA_PORT: "3306"
+  MARIADB_DATABASE: "my_database"
+
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: db-configmap

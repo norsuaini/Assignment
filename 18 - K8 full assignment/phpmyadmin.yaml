@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: phpmyadmin
+  name: phpmyadmin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phpmyadmin
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: phpmyadmin
+    spec:
+
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: "app"
+                operator: In
+                values:
+                - "mariadb"
+            topologyKey: kubernetes.io/hostname
+
+      containers:
+      - image: phpmyadmin:latest
+        name: phpmyadmin
+        ports:
+          - containerPort: 80
+
+        env:
+          - name: PMA_ARBITRARY
+            valueFrom:
+              configMapKeyRef:
+                name: db-configmap
+                key: PMA_ARBITRARY
+            
+          - name: PMA_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: db-configmap
+                key: PMA_HOST
+
+          - name: PMA_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: db-configmap
+                key: PMA_PORT
+
+          # For some reason, PMA_USER and PMA_PASSWORD below cannot be taken from Secret file
+          # PHPMYAdmin would fail to connect to MySQL
+
+          - name: PMA_USER
+            value: "user"
+
+          - name: PMA_PASSWORD
+            value: "password"
+
+status: {}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: phpmyadmin-service
+spec:
+  selector:
+    app: phpmyadmin
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 80
+  type: LoadBalancer
